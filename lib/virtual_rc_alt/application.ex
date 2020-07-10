@@ -8,7 +8,7 @@ defmodule VirtualRcAlt.Application do
   def start(_type, _args) do
     children = [
       # Start the Ecto repository
-      VirtualRcAlt.Repo,
+     # VirtualRcAlt.Repo,
       # Start the Telemetry supervisor
       VirtualRcAltWeb.Telemetry,
       # Start the PubSub system
