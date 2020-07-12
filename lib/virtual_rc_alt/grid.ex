@@ -34,6 +34,9 @@ defmodule VirtualRcAlt.Grid do
   def create_or_destroy_block(), do: create_or_destroy_block(__MODULE__)
   def create_or_destroy_block(pid), do: GenServer.call(pid, :create_or_destroy_block)
 
+  def change_block_color(), do: change_block_color(__MODULE__)
+  def change_block_color(pid), do: GenServer.call(pid, :change_block_color)
+
   def subscribe do
     Phoenix.PubSub.subscribe(VirtualRcAlt.PubSub, @topic)
   end
@@ -130,30 +133,76 @@ defmodule VirtualRcAlt.Grid do
     {:reply, {:error, "pid is not registered"}, state}
   end
 
-  def handle_call(:create_or_destroy_block, {from_pid, _tag}, %{grid: grid, players: players} = state)
+  def handle_call(
+        :create_or_destroy_block,
+        {from_pid, _tag},
+        %{grid: grid, players: players} = state
+      )
       when is_map_key(players, from_pid) do
-    %{position: {x,y}, facing: direction} = player = players[from_pid]
+    %{position: {x, y}} = player = players[from_pid]
 
-    block_location = case direction do
-      :up -> {x, y-1}
-      :down -> {x, y+1}
-      :left -> {x-1, y}
-      :right -> {x+1, y}
-    end
+    block_location =
+      case player.facing do
+        :up -> {x, y - 1}
+        :down -> {x, y + 1}
+        :left -> {x - 1, y}
+        :right -> {x + 1, y}
+      end
 
-    grid = case grid[block_location] do
-      nil -> # create a new block
-        update_grid(grid, block_location, ColorBlock.new())
-      %ColorBlock{} -> # destroy the block
-        update_grid(grid, block_location, nil)
-      _ -> # do nothing
-      grid
-    end
+    grid =
+      case grid[block_location] do
+        # create a new block
+        nil ->
+          update_grid(grid, block_location, ColorBlock.new(player.last_color))
+
+        # destroy the block
+        %ColorBlock{} ->
+          update_grid(grid, block_location, nil)
+
+        # do nothing
+        _ ->
+          grid
+      end
 
     {:reply, player, %{state | grid: grid}}
   end
 
   def handle_call(:create_or_destroy_block, _from, state) do
+    {:reply, {:error, "pid is not registered"}, state}
+  end
+
+  def handle_call(
+        :change_block_color,
+        {from_pid, _tag},
+        %{grid: grid, players: players} = state
+      )
+      when is_map_key(players, from_pid) do
+    %{position: {x, y}} = player = players[from_pid]
+
+    block_location =
+      case player.facing do
+        :up -> {x, y - 1}
+        :down -> {x, y + 1}
+        :left -> {x - 1, y}
+        :right -> {x + 1, y}
+      end
+
+    {grid, player} =
+      case grid[block_location] do
+        # change the block color
+        %ColorBlock{} = color_block ->
+          new_block = ColorBlock.change_color(color_block)
+          {update_grid(grid, block_location, new_block), %{player | last_color: new_block.color}}
+
+        # do nothing
+        _ ->
+          {grid, player}
+      end
+
+    {:reply, player, %{state | grid: grid, players: Map.put(players, from_pid, player)}}
+  end
+
+  def handle_call(:change_block_color, _from, state) do
     {:reply, {:error, "pid is not registered"}, state}
   end
 

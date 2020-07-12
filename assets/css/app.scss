@@ -620,6 +620,29 @@ img {
   background-color: gray;
 }
 
+.grid-cell.block.pink {
+  background-color: pink;
+}
+
+.grid-cell.block.orange {
+  background-color: orange;
+}
+
+.grid-cell.block.green {
+  background-color: green;
+}
+
+.grid-cell.block.blue {
+  background-color: blue;
+}
+
+.grid-cell.block.purple {
+  background-color: purple;
+}
+
+.grid-cell.block.yellow {
+  background-color: yellow;
+}
 
 .facing.up::after {
   content: "";

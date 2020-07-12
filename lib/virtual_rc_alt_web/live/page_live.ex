@@ -33,6 +33,8 @@ defmodule VirtualRcAltWeb.PageLive do
 
       "x" -> Grid.create_or_destroy_block()
 
+      "c" -> Grid.change_block_color()
+
       _ -> socket.assigns.player
     end
 
