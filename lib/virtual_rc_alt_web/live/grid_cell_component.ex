@@ -1,7 +1,7 @@
 defmodule VirtualRcAltWeb.GridCellComponent do
  use VirtualRcAltWeb, :live_component
 
- alias VirtualRcAlt.Player
+ alias VirtualRcAlt.{Player, ColorBlock}
 
   def render(assigns) do
     ~L"""
@@ -16,7 +16,7 @@ defmodule VirtualRcAltWeb.GridCellComponent do
   defp inner_content(%Player{initial: initial}), do: initial
   defp inner_content(_), do: ""
 
-  defp class(%{type: :color, color: color}), do: "grid-cell block #{color}"
+  defp class(%ColorBlock{color: color}), do: "grid-cell block #{color}"
   defp class(%Player{facing: facing}), do: "grid-cell facing #{facing}"
   defp class(_), do: "grid-cell"
 end

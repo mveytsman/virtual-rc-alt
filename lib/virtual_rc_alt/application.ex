@@ -16,7 +16,8 @@ defmodule VirtualRcAlt.Application do
       # Start the Endpoint (http/https)
       VirtualRcAltWeb.Endpoint,
 
-      VirtualRcAlt.Grid
+      VirtualRcAlt.Grid,
+      VirtualRcAlt.PlayerMonitor
 
     ]
 

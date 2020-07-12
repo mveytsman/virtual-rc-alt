@@ -2,7 +2,7 @@ defmodule VirtualRcAlt.Grid do
   use GenServer
   require Logger
 
-  alias VirtualRcAlt.{Player, ColorBlock}
+  alias VirtualRcAlt.{Player, ColorBlock, PlayerMonitor}
 
   @width 500
   @height 500
@@ -15,9 +15,13 @@ defmodule VirtualRcAlt.Grid do
     GenServer.start_link(__MODULE__, nil, opts)
   end
 
-  @spec register_player(any) :: any
   def register_player(name), do: register_player(__MODULE__, name)
   def register_player(pid, name), do: GenServer.call(pid, {:register_player, name})
+
+  def unregister_player(player_pid), do: unregister_player(__MODULE__, player_pid)
+
+  def unregister_player(pid, player_pid),
+    do: GenServer.call(pid, {:unregister_player, player_pid})
 
   def get_viewport(origin, width, height), do: get_viewport(__MODULE__, origin, width, height)
 
@@ -55,6 +59,7 @@ defmodule VirtualRcAlt.Grid do
         {from_pid, _tag},
         %{players: players, grid: grid} = state
       ) do
+    PlayerMonitor.monitor(from_pid)
     position = {3, 3}
     player = %Player{position: position, facing: :right, name: name, initial: "Q"}
 
@@ -64,6 +69,31 @@ defmodule VirtualRcAlt.Grid do
        | players: Map.put(players, from_pid, player),
          grid: update_grid(grid, position, player)
      }}
+  end
+
+  def handle_call(
+        {:unregister_player, player_pid},
+        _from,
+        %{players: players, grid: grid} = state
+      )
+      when is_map_key(players, player_pid) do
+    {player, players} = Map.pop!(players, player_pid)
+    grid = update_grid(grid, player.position, nil)
+
+    {:reply, :ok,
+     %{
+       state
+       | players: players,
+         grid: grid
+     }}
+  end
+
+  def handle_call(
+        {:unregister_player, _player_pid},
+        _from,
+        state
+      ) do
+    {:reply, {:error, "player not registered"}}
   end
 
   def handle_call(
