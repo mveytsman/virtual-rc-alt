@@ -2,7 +2,7 @@ defmodule VirtualRcAlt.Grid do
   use GenServer
   require Logger
 
-  alias VirtualRcAlt.{Player, ColorBlock, PlayerMonitor}
+  alias VirtualRcAlt.{Player, ColorBlock, NoteBlock, LinkBlock, PlayerMonitor}
 
   @width 500
   @height 500
@@ -52,8 +52,13 @@ defmodule VirtualRcAlt.Grid do
 
     grid =
       for pos <- left_border ++ right_border ++ top_border ++ bottom_border,
-          into: %{},
-          do: {pos, ColorBlock.new()}
+          into: %{} do
+        {pos, ColorBlock.new()}
+      end
+      |> Map.put({3, 0}, NoteBlock.new("x to create/destroy blocks, c to change block color, t to change block type, e to edit notes/links"))
+      |> Map.put({4,0}, NoteBlock.new("Use WASD or the Arrow keys to move"))
+      |> Map.put({5,0}, NoteBlock.new("The real deal is up next!"))
+      |> Map.put({6,0}, LinkBlock.new("https://www.recurse.com/virtual2"))
 
     {:ok, %{players: %{}, grid: grid}}
   end
@@ -106,6 +111,8 @@ defmodule VirtualRcAlt.Grid do
         _from,
         %{grid: grid} = state
       ) do
+    Logger.info("Getting viewport #{x_origin}, #{y_origin}")
+
     viewport =
       for {{x, y}, v} <- grid,
           x >= x_origin,
@@ -140,7 +147,7 @@ defmodule VirtualRcAlt.Grid do
       )
       when is_map_key(players, from_pid) do
     %{position: {x, y}} = player = players[from_pid]
-
+    Logger.info("create or destry")
     block_location =
       case player.facing do
         :up -> {x, y - 1}

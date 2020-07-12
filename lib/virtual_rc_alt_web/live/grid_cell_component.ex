@@ -1,22 +1,35 @@
 defmodule VirtualRcAltWeb.GridCellComponent do
- use VirtualRcAltWeb, :live_component
+  use VirtualRcAltWeb, :live_component
 
- alias VirtualRcAlt.{Player, ColorBlock}
+  alias VirtualRcAlt.{Player, ColorBlock, NoteBlock, LinkBlock}
 
-  def render(assigns) do
+  def render(%{contents: %ColorBlock{color: color}} = assigns) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="<%= class(@contents) %>"><%= inner_content(@contents) %></div>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block <%= color %>"></div>
     """
   end
 
-  def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+  def render(%{contents: %NoteBlock{note: note}} = assigns) do
+    ~L"""
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block yellow <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= note%>"><i class="fa fa-sticky-note-o"></i></div>
+    """
   end
 
-  defp inner_content(%Player{initial: initial}), do: initial
-  defp inner_content(_), do: ""
+  def render(%{contents: %LinkBlock{url: url}} = assigns) do
+    ~L"""
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block green <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= url%>"><a href="<%= url %>" target="_blank"><i style="text-color: white;" class="fa fa-link"></i></a></div>
+    """
+  end
 
-  defp class(%ColorBlock{color: color}), do: "grid-cell block #{color}"
-  defp class(%Player{facing: facing}), do: "grid-cell facing #{facing}"
-  defp class(_), do: "grid-cell"
+  def render(%{contents: %Player{facing: facing, initial: initial}} = assigns) do
+    ~L"""
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell facing <%= facing %>"><%= initial %></div>
+    """
+  end
+
+  def render(assigns) do
+    ~L"""
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell"></div>
+    """
+  end
 end
