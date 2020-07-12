@@ -29,8 +29,10 @@ defmodule VirtualRcAlt.Grid do
     do: GenServer.call(pid, {:get_viewport, origin, width, height})
 
   def move(direction), do: move(__MODULE__, direction)
-  @spec move(atom | pid | {atom, any} | {:via, atom, any}, any) :: any
   def move(pid, direction), do: GenServer.call(pid, {:move, direction})
+
+  def create_or_destroy_block(), do: create_or_destroy_block(__MODULE__)
+  def create_or_destroy_block(pid), do: GenServer.call(pid, :create_or_destroy_block)
 
   def subscribe do
     Phoenix.PubSub.subscribe(VirtualRcAlt.PubSub, @topic)
@@ -48,7 +50,7 @@ defmodule VirtualRcAlt.Grid do
     grid =
       for pos <- left_border ++ right_border ++ top_border ++ bottom_border,
           into: %{},
-          do: {pos, %ColorBlock{color: :gray}}
+          do: {pos, ColorBlock.new()}
 
     {:ok, %{players: %{}, grid: grid}}
   end
@@ -91,7 +93,7 @@ defmodule VirtualRcAlt.Grid do
   def handle_call(
         {:unregister_player, _player_pid},
         _from,
-        state
+        _state
       ) do
     {:reply, {:error, "player not registered"}}
   end
@@ -125,8 +127,33 @@ defmodule VirtualRcAlt.Grid do
   end
 
   def handle_call({:move, _direction}, _from, state) do
-    require IEx
-    IEx.pry()
+    {:reply, {:error, "pid is not registered"}, state}
+  end
+
+  def handle_call(:create_or_destroy_block, {from_pid, _tag}, %{grid: grid, players: players} = state)
+      when is_map_key(players, from_pid) do
+    %{position: {x,y}, facing: direction} = player = players[from_pid]
+
+    block_location = case direction do
+      :up -> {x, y-1}
+      :down -> {x, y+1}
+      :left -> {x-1, y}
+      :right -> {x+1, y}
+    end
+
+    grid = case grid[block_location] do
+      nil -> # create a new block
+        update_grid(grid, block_location, ColorBlock.new())
+      %ColorBlock{} -> # destroy the block
+        update_grid(grid, block_location, nil)
+      _ -> # do nothing
+      grid
+    end
+
+    {:reply, player, %{state | grid: grid}}
+  end
+
+  def handle_call(:create_or_destroy_block, _from, state) do
     {:reply, {:error, "pid is not registered"}, state}
   end
 

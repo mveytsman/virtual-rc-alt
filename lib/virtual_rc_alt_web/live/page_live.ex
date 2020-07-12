@@ -31,6 +31,8 @@ defmodule VirtualRcAltWeb.PageLive do
       "ArrowDown" -> Grid.move(:down)
       "ArrowRight" -> Grid.move(:right)
 
+      "x" -> Grid.create_or_destroy_block()
+
       _ -> socket.assigns.player
     end
 
