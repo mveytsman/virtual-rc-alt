@@ -1,39 +1,63 @@
 defmodule VirtualRcAltWeb.PageLive do
   use VirtualRcAltWeb, :live_view
 
+  alias VirtualRcAltWeb.GridCellComponent
+
+  alias VirtualRcAlt.Grid
+
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, query: "", results: %{})}
+    width = 50
+    height = 25
+    origin = {0,0}
+    player = Grid.register_player("Max")
+    viewport = Grid.get_viewport(origin, width, height)
+
+    Grid.subscribe()
+
+    {:ok, assign(socket, origin: origin, width: width, height: height, viewport: viewport, player: player)}
   end
 
   @impl true
-  def handle_event("suggest", %{"q" => query}, socket) do
-    {:noreply, assign(socket, results: search(query), query: query)}
+  def handle_event("move", %{"key" => key}, socket) do
+    player = case key do
+      "w" -> Grid.move(:up)
+      "a" -> Grid.move(:left)
+      "s" -> Grid.move(:down)
+      "d" -> Grid.move(:right)
+
+      "ArrowUp" -> Grid.move(:up)
+      "ArrowLeft" -> Grid.move(:left)
+      "ArrowDown" -> Grid.move(:down)
+      "ArrowRight" -> Grid.move(:right)
+
+      _ -> socket.assigns.player
+    end
+
+    {:noreply, assign(socket, player: player)}
   end
 
   @impl true
-  def handle_event("search", %{"q" => query}, socket) do
-    case search(query) do
-      %{^query => vsn} ->
-        {:noreply, redirect(socket, external: "https://hexdocs.pm/#{query}/#{vsn}")}
+  def handle_info({:update_cell, position, value}, state) do
+    # TODO: check viewport
+    send_update GridCellComponent, id: position, contents: value
 
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "No dependencies found matching \"#{query}\"")
-         |> assign(results: %{}, query: query)}
-    end
+    {:noreply, state}
   end
 
-  defp search(query) do
-    if not VirtualRcAltWeb.Endpoint.config(:code_reloader) do
-      raise "action disabled when not in development"
-    end
-
-    for {app, desc, vsn} <- Application.started_applications(),
-        app = to_string(app),
-        String.starts_with?(app, query) and not List.starts_with?(desc, ~c"ERTS"),
-        into: %{},
-        do: {app, vsn}
+  @impl true
+  def render(assigns) do
+    ~L"""
+    <div><%= inspect @  player %></div>
+    <div id="grid" class="grid" phx-window-keydown="move">
+    <%= for y <- y_range(@origin, @height), x <- x_range(@origin, @width) do %>
+      <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: @viewport[{x,y}]%>
+    <% end %>
+    </div>
+    """
   end
+
+  defp x_range({x,_}, width), do: x..x+width-1
+  defp y_range({_,y}, height), do: y..y+height-1
+
 end

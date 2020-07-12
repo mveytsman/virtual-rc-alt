@@ -14,9 +14,10 @@ defmodule VirtualRcAlt.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: VirtualRcAlt.PubSub},
       # Start the Endpoint (http/https)
-      VirtualRcAltWeb.Endpoint
-      # Start a worker by calling: VirtualRcAlt.Worker.start_link(arg)
-      # {VirtualRcAlt.Worker, arg}
+      VirtualRcAltWeb.Endpoint,
+
+      VirtualRcAlt.Grid
+
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
