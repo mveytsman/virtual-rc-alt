@@ -222,17 +222,26 @@ defmodule VirtualRcAlt.Grid do
         _ -> initial_position
       end
 
+    # didn't move
     if position == initial_position do
       {player, grid}
     else
-      player = %{player | position: position}
+      case grid[position] do
+        # can't walk through blocks
+        %ColorBlock{} ->
+          {player, grid}
 
-      grid =
-        grid
-        |> update_grid(initial_position, nil)
-        |> update_grid(position, player)
+        # move
+        _ ->
+          player = %{player | position: position}
 
-      {player, grid}
+          grid =
+            grid
+            |> update_grid(initial_position, nil)
+            |> update_grid(position, player)
+
+          {player, grid}
+      end
     end
   end
 
