@@ -110,7 +110,7 @@ defmodule VirtualRcAlt.Grid do
       )
       when is_map_key(players, player_pid) do
     {player, players} = Map.pop!(players, player_pid)
-    grid = update_grid(grid, player.position, [])
+    grid = update_grid(grid, player.position, Enum.filter(get_cell(grid, player.position), &(&1.pid != player.pid)))
 
     {:reply, :ok,
      %{
@@ -307,7 +307,7 @@ defmodule VirtualRcAlt.Grid do
             update_grid(
               grid,
               initial_position,
-              List.delete(get_cell(grid, initial_position), player)
+              Enum.filter(get_cell(grid, initial_position), &(&1.pid != player.pid))
             )
 
           grid =
@@ -327,7 +327,7 @@ defmodule VirtualRcAlt.Grid do
     new_player = %{player | facing: direction}
 
     grid =
-      update_grid(grid, position, [new_player | List.delete(get_cell(grid, position), player)])
+      update_grid(grid, position, [new_player |  Enum.filter(get_cell(grid, position), &(&1.pid != player.pid))])
 
     {new_player, grid}
   end
