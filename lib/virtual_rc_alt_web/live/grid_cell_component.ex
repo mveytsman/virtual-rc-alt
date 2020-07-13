@@ -32,13 +32,13 @@ defmodule VirtualRcAltWeb.GridCellComponent do
 
   def render(%{contents: %NoteBlock{note: note}} = assigns) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block yellow <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= note %>"><i class="fa fa-sticky-note-o"></i></div>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block yellow <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<% note_tooltip(note) %>"><i class="fa fa-sticky-note-o"></i></div>
     """
   end
 
   def render(%{contents: %LinkBlock{url: url}} = assigns) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block green <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= url%>"><a href="<%= url %>" target="_blank"><i style="text-color: white;" class="fa fa-link"></i></a></div>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block green <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= link_tooltip(url) %>"><a href="<%= url %>" target="_blank"><i style="text-color: white;" class="fa fa-link"></i></a></div>
     """
   end
 
@@ -56,5 +56,21 @@ defmodule VirtualRcAltWeb.GridCellComponent do
 
   def edit(id) do
     send_update(__MODULE__, id: id, edit: true)
+  end
+
+  defp note_tooltip(note) do
+    if note == nil || note == "" do
+      "press `e` to write a note"
+    else
+      note
+    end
+  end
+
+  defp link_tooltip(url) do
+    if url == nil || url == "" do
+      "press `e` to add a link"
+    else
+      url
+    end
   end
 end

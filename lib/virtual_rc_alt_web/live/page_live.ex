@@ -44,6 +44,7 @@ defmodule VirtualRcAltWeb.PageLive do
         "ArrowRight" -> move(socket, :right)
         "x" -> create_or_destroy_block(socket)
         "c" -> change_block_color(socket)
+        "t" -> change_block_type(socket)
         "e" -> edit_block(socket)
         _ -> socket
       end
@@ -136,13 +137,19 @@ defmodule VirtualRcAltWeb.PageLive do
   end
 
   defp create_or_destroy_block(socket) do
-    Grid.create_or_destroy_block()
+    Grid.create_or_destroy_block(facing(socket.assigns.player))
 
     socket
   end
 
   defp change_block_color(socket) do
-    Grid.change_block_color()
+    Grid.change_block_color(facing(socket.assigns.player))
+
+    socket
+  end
+
+  defp change_block_type(socket) do
+    Grid.change_block_type(facing(socket.assigns.player))
 
     socket
   end

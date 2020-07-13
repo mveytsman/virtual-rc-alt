@@ -7,6 +7,8 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(30, 30px);
+  margin-top: 3em;
+  margin-left: 3em;
   //column-gap: .2em;
   //row-gap: .2em;
 }
@@ -142,7 +144,7 @@
   margin-bottom: 5px;
   margin-left: -80px;
   padding: 7px;
-  min-width: 30em;
+  min-width: 20em;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px;
