@@ -6,6 +6,7 @@ defmodule VirtualRcAlt.Grid do
 
   @width 50
   @height 50
+  @spawn_point {3,3}
 
   @topic "grid"
 
@@ -85,14 +86,20 @@ defmodule VirtualRcAlt.Grid do
         %{players: players, grid: grid} = state
       ) do
     PlayerMonitor.monitor(from_pid)
-    position = {3, 3}
-    player = %Player{position: position, facing: :right, name: name, initial: String.first(name) |> String.upcase()}
+
+    player = %Player{
+      pid: from_pid,
+      position: @spawn_point,
+      facing: :right,
+      name: name,
+      initial: String.first(name) |> String.upcase()
+    }
 
     {:reply, player,
      %{
        state
        | players: Map.put(players, from_pid, player),
-         grid: update_grid(grid, position, player)
+         grid: update_grid(grid, @spawn_point, [player | get_cell(grid, @spawn_point)])
      }}
   end
 
@@ -103,7 +110,7 @@ defmodule VirtualRcAlt.Grid do
       )
       when is_map_key(players, player_pid) do
     {player, players} = Map.pop!(players, player_pid)
-    grid = update_grid(grid, player.position, nil)
+    grid = update_grid(grid, player.position, [])
 
     {:reply, :ok,
      %{
@@ -155,6 +162,14 @@ defmodule VirtualRcAlt.Grid do
     {:reply, {:error, "pid is not registered"}, state}
   end
 
+  # no touching the spawn point
+  def handle_call(
+        {:create_or_destroy_block, @spawn_point},
+        _from,
+        state
+      ),
+      do: {:reply, :ok, state}
+
   def handle_call(
         {:create_or_destroy_block, position},
         {from_pid, _tag},
@@ -164,9 +179,9 @@ defmodule VirtualRcAlt.Grid do
     player = players[from_pid]
 
     grid =
-      case grid[position] do
+      case get_cell(grid, position) do
         # create a new block
-        nil ->
+        [] ->
           update_grid(grid, position, ColorBlock.new(player.last_color))
 
         # destroy the block
@@ -193,7 +208,7 @@ defmodule VirtualRcAlt.Grid do
       when is_map_key(players, from_pid) do
     player = players[from_pid]
 
-    case grid[position] do
+    case get_cell(grid, position) do
       # change the block color
       %ColorBlock{} = color_block ->
         new_block = ColorBlock.change_color(color_block)
@@ -220,7 +235,7 @@ defmodule VirtualRcAlt.Grid do
       )
       when is_map_key(players, from_pid) do
     grid =
-      case grid[position] do
+      case get_cell(grid, position) do
         %ColorBlock{} ->
           update_grid(grid, position, NoteBlock.new())
 
@@ -243,7 +258,7 @@ defmodule VirtualRcAlt.Grid do
 
   def handle_call({:edit_block, position, content}, _from, %{grid: grid} = state) do
     grid =
-      case block = grid[position] do
+      case block = get_cell(grid, position) do
         %NoteBlock{} -> update_grid(grid, position, %{block | note: content})
         %LinkBlock{} -> update_grid(grid, position, %{block | url: content})
         _ -> block
@@ -272,51 +287,72 @@ defmodule VirtualRcAlt.Grid do
     if position == initial_position do
       {player, grid}
     else
-      case grid[position] do
+      case get_cell(grid, position) do
         # can't walk through blocks
         %ColorBlock{} ->
           {player, grid}
 
+        %NoteBlock{} ->
+          {player, grid}
+
+        %LinkBlock{} ->
+          {player, grid}
+
         # move
         _ ->
-          player = %{player | position: position}
+          # TODO this is hacky with the list thing, should be a pipeline with better named helpers!
+          new_player = %{player | position: position}
 
           grid =
-            grid
-            |> update_grid(initial_position, nil)
-            |> update_grid(position, player)
+            update_grid(
+              grid,
+              initial_position,
+              List.delete(get_cell(grid, initial_position), player)
+            )
 
-          {player, grid}
+          grid =
+            update_grid(grid, position, [
+              new_player | get_cell(grid, position)
+            ])
+
+          {new_player, grid}
       end
     end
   end
 
-  defp move_player(player, direction, grid) do
+  defp move_player(%Player{position: position} = player, direction, grid) do
     Logger.info("Turn #{direction}")
 
-    player = %{player | facing: direction}
-    grid = update_grid(grid, player.position, player)
+    # TODO this is hacky with the list thing, should be a pipeline with better named helpers!
+    new_player = %{player | facing: direction}
 
-    {player, grid}
+    grid =
+      update_grid(grid, position, [new_player | List.delete(get_cell(grid, position), player)])
+
+    {new_player, grid}
   end
 
-  defp update_grid(grid, position, nil) do
+  def get_cell(grid, position) do
+    Map.get(grid, position, [])
+  end
+
+  def update_grid(grid, position, []) do
     Map.delete(grid, position)
-    |> broadcast_update(position)
+    |> broadcast_update(position, [])
   end
 
-  defp update_grid(grid, position, value) do
+  def update_grid(grid, position, value) do
     Map.put(grid, position, value)
-    |> broadcast_update(position)
+    |> broadcast_update(position, value)
   end
 
-  defp broadcast_update(grid, position) do
+  defp broadcast_update(grid, position, value) do
     Logger.info("Updaing #{inspect(position)}")
 
     Phoenix.PubSub.broadcast(
       VirtualRcAlt.PubSub,
       @topic,
-      {:update_cell, position, grid[position]}
+      {:update_cell, position, value}
     )
 
     grid

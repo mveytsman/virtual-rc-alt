@@ -18,6 +18,6 @@
 <% end %>
 <div id="grid:<%= inspect @origin %>" class="grid" <%= if @player && !@edit_cell do %> phx-window-keydown="keydown" <% end %>>
     <%= for y <- y_range(@origin, @height), x <- x_range(@origin, @width) do %>
-        <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: @viewport[{x,y}], currently_facing: false %>
+        <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: Map.get(@viewport,{x,y},[]), currently_facing: false %>
     <% end %>
 </div>

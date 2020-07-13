@@ -17,7 +17,6 @@
   border: 1px solid black;
   width: 30px;
   height: 30px;
-  text-align: center;
 }
 
 .grid-cell.block.gray {
@@ -55,13 +54,22 @@
   }
 }
 
+.player {
+  position: absolute;
+  .initial {
+    display: inline-block;
+    text-align: center;
+    width: 28px;
+  }
+}
+
 .facing.up::after {
   content: "";
-  z-index: 10;
-  position: relative;
+  z-index: 100;
+  position: absolute;
   display: inline-block;
-  left: calc(-50% + 7.5px);
-  top: calc(-100% + 5px);
+  left: 10px;
+  top: -8px;
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
@@ -72,11 +80,11 @@
 
 .facing.down::after {
   content: "";
-  z-index: 10;
-  position: relative;
+  z-index: 100;
+  position: absolute;
   display: inline-block;
-  left: calc(-50% + 7.5px);
-  top: calc(25% + 10px);
+  left: 10px;
+  top: 33px;
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
@@ -87,11 +95,11 @@
 
 .facing.left::before {
   content: "";
-  z-index: 10;
-  position: relative;
+  z-index: 100;
+  position: absolute;
   display: inline-block;
-  left: -50%;
-  top: 0;
+  left: -10px;
+  top: 10px;
   width: 0;
   height: 0;
   border-top: 5px solid transparent;
@@ -102,11 +110,11 @@
 
 .facing.right::after {
   content: "";
-  z-index: 10;
-  position: relative;
+  z-index: 100;
+  position: absolute;
   display: inline-block;
-  left: 50%;
-  top: 0;
+  left: 33px;
+  top: 10px;
   width: 0;
   height: 0;
   border-top: 5px solid transparent;

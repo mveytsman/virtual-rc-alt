@@ -42,10 +42,15 @@ defmodule VirtualRcAltWeb.GridCellComponent do
     """
   end
 
-  def render(%{contents: %Player{facing: facing, initial: initial, name: name}} = assigns) do
+  # TODO: Phoenix bug here when when I iterate through `players` instead of `@contents` the change tracking breaks
+  def render(%{contents: players} = assigns) when is_list(players) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell facing <%= facing %>">
-      <span data-tooltip="<%= name %>"><%= initial %></span>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell">
+      <%= for {%Player{pid: pid, name: name, initial: initial, facing: facing}, i}<- Enum.with_index(@contents) do %>
+        <div id="<%= inspect pid %>" class="player facing <%= facing %>" style="z-index: <%= i+5 %>;">
+          <span class="initial" data-tooltip="<%= name %>"><%= initial %></span>
+        </div>
+      <% end %>
     </div>
     """
   end

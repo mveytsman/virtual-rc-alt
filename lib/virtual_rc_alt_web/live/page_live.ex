@@ -66,8 +66,6 @@ defmodule VirtualRcAltWeb.PageLive do
     {:noreply, assign(socket, edit_cell: nil)}
   end
   @impl true
-  @spec handle_info({:open_editor, any, any} | {:update_cell, {any, any}, any}, map) ::
-          {:noreply, any}
   def handle_info(
         {:update_cell, {x, y} = position, value},
         %{assigns: %{width: width, height: height, origin: {x_origin, y_origin}}} = socket
