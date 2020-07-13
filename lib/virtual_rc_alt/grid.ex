@@ -86,7 +86,7 @@ defmodule VirtualRcAlt.Grid do
       ) do
     PlayerMonitor.monitor(from_pid)
     position = {3, 3}
-    player = %Player{position: position, facing: :right, name: name, initial: "Q"}
+    player = %Player{position: position, facing: :right, name: name, initial: String.first(name) |> String.upcase()}
 
     {:reply, player,
      %{

@@ -1,7 +1,22 @@
+<%= unless @player do %>
+<div class="modal-container">
+  <div class="modal-inner-container">
+    <form phx-submit="register">
+      <fieldset>
+      <label for="name">Name</label>
+      <input type="text" placeholder="Rosie" name="name" />
+        <div class="float-right">
+          <input class="button" type="submit" value="Register">
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+<% end %>
 <%= if @edit_cell do %>
     <%= live_component @socket, EditCellComponent, id: :edit_cell, position: @edit_cell[:position], contents: @edit_cell[:contents] %>
 <% end %>
-<div id="grid:<%= inspect @origin %>" class="grid" <%= unless @edit_cell do %> phx-window-keydown="keydown" <% end %>>
+<div id="grid:<%= inspect @origin %>" class="grid" <%= if @player && !@edit_cell do %> phx-window-keydown="keydown" <% end %>>
     <%= for y <- y_range(@origin, @height), x <- x_range(@origin, @width) do %>
         <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: @viewport[{x,y}], currently_facing: false %>
     <% end %>

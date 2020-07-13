@@ -42,9 +42,11 @@ defmodule VirtualRcAltWeb.GridCellComponent do
     """
   end
 
-  def render(%{contents: %Player{facing: facing, initial: initial}} = assigns) do
+  def render(%{contents: %Player{facing: facing, initial: initial, name: name}} = assigns) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell facing <%= facing %>"><%= initial %></div>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell facing <%= facing %>">
+      <span data-tooltip="<%= name %>"><%= initial %></span>
+    </div>
     """
   end
 

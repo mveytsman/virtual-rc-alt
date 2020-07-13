@@ -10,7 +10,6 @@ defmodule VirtualRcAltWeb.PageLive do
     width = 30
     height = 20
     origin = {0, 0}
-    player = Grid.register_player("Max")
     viewport = Grid.get_viewport(origin, width, height)
 
     Grid.subscribe()
@@ -21,9 +20,14 @@ defmodule VirtualRcAltWeb.PageLive do
        width: width,
        height: height,
        viewport: viewport,
-       player: player,
+       player: nil,
        edit_cell: nil
      )}
+  end
+
+  def handle_event("register", %{"name" => name}, socket) do
+    {:noreply, socket
+    |> assign(:player, Grid.register_player(name))}
   end
 
   @impl true
@@ -51,7 +55,6 @@ defmodule VirtualRcAltWeb.PageLive do
 
     {:noreply, socket}
   end
-
 
   def handle_event("close-editor", _, socket) do
     {:noreply, assign(socket, edit_cell: nil)}
