@@ -186,7 +186,7 @@ defmodule VirtualRcAlt.Grid do
 
         # destroy the block
         %ColorBlock{} ->
-          update_grid(grid, position, nil)
+          update_grid(grid, position, [])
 
         # do nothing
         _ ->
@@ -337,6 +337,11 @@ defmodule VirtualRcAlt.Grid do
   end
 
   def update_grid(grid, position, []) do
+    Map.delete(grid, position)
+    |> broadcast_update(position, [])
+  end
+
+  def update_grid(grid, position, nil) do
     Map.delete(grid, position)
     |> broadcast_update(position, [])
   end
