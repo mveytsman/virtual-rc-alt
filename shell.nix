@@ -24,7 +24,6 @@ let
     export PS1='\n\[\033[1;32m\][nix-shell:\w]($(git rev-parse --abbrev-ref HEAD))\$\[\033[0m\] '
     export LANG=en_US.UTF-8
     set -a
-    source .env
     set +a
   '';
 
@@ -45,7 +44,6 @@ let
 
   hooks = baseHooks + elixirHooks + nodeHooks; 
 in mkShell {
-  name = "mc-hammer";
   buildInputs = final;
   shellHook = hooks;
 }
