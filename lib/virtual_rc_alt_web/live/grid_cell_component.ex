@@ -32,7 +32,7 @@ defmodule VirtualRcAltWeb.GridCellComponent do
 
   def render(%{contents: %NoteBlock{note: note}} = assigns) do
     ~L"""
-    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block yellow <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<% note_tooltip(note) %>"><i class="fa fa-sticky-note-o"></i></div>
+    <div id="<%= "#{@x},#{@y}" %>" class="grid-cell block yellow <%= if @currently_facing, do: "show-tooltip", else: ""%>" data-tooltip="<%= note_tooltip(note) %>"><i class="fa fa-sticky-note-o"></i></div>
     """
   end
 
