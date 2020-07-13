@@ -4,8 +4,8 @@ defmodule VirtualRcAlt.Grid do
 
   alias VirtualRcAlt.{Player, ColorBlock, NoteBlock, LinkBlock, PlayerMonitor}
 
-  @width 500
-  @height 500
+  @width 50
+  @height 50
 
   @topic "grid"
 
@@ -37,6 +37,11 @@ defmodule VirtualRcAlt.Grid do
   def change_block_color(), do: change_block_color(__MODULE__)
   def change_block_color(pid), do: GenServer.call(pid, :change_block_color)
 
+
+
+  def edit_block(position, content), do: edit_block(__MODULE__, position, content)
+  def edit_block(pid, position, content), do: GenServer.call(pid, {:edit_block, position, content})
+
   def subscribe do
     Phoenix.PubSub.subscribe(VirtualRcAlt.PubSub, @topic)
   end
@@ -55,10 +60,15 @@ defmodule VirtualRcAlt.Grid do
           into: %{} do
         {pos, ColorBlock.new()}
       end
-      |> Map.put({3, 0}, NoteBlock.new("x to create/destroy blocks, c to change block color, t to change block type, e to edit notes/links"))
-      |> Map.put({4,0}, NoteBlock.new("Use WASD or the Arrow keys to move"))
-      |> Map.put({5,0}, NoteBlock.new("The real deal is up next!"))
-      |> Map.put({6,0}, LinkBlock.new("https://www.recurse.com/virtual2"))
+      |> Map.put(
+        {3, 0},
+        NoteBlock.new(
+          "x to create/destroy blocks, c to change block color, t to change block type, e to edit notes/links"
+        )
+      )
+      |> Map.put({4, 0}, NoteBlock.new("Use WASD or the Arrow keys to move"))
+      |> Map.put({5, 0}, NoteBlock.new("The real deal is up next!"))
+      |> Map.put({6, 0}, LinkBlock.new("https://www.recurse.com/virtual2"))
 
     {:ok, %{players: %{}, grid: grid}}
   end
@@ -148,6 +158,7 @@ defmodule VirtualRcAlt.Grid do
       when is_map_key(players, from_pid) do
     %{position: {x, y}} = player = players[from_pid]
     Logger.info("create or destry")
+
     block_location =
       case player.facing do
         :up -> {x, y - 1}
@@ -171,7 +182,7 @@ defmodule VirtualRcAlt.Grid do
           grid
       end
 
-    {:reply, player, %{state | grid: grid}}
+    {:reply, :ok, %{state | grid: grid}}
   end
 
   def handle_call(:create_or_destroy_block, _from, state) do
@@ -206,11 +217,22 @@ defmodule VirtualRcAlt.Grid do
           {grid, player}
       end
 
-    {:reply, player, %{state | grid: grid, players: Map.put(players, from_pid, player)}}
+    {:reply, :ok, %{state | grid: grid, players: Map.put(players, from_pid, player)}}
   end
 
   def handle_call(:change_block_color, _from, state) do
     {:reply, {:error, "pid is not registered"}, state}
+  end
+
+  def handle_call({:edit_block, position, content}, _from, %{grid: grid} = state) do
+    grid = case block = grid[position] do
+      %NoteBlock{} -> update_grid(grid, position, %{block | note: content})
+      %LinkBlock{} -> update_grid(grid, position, %{block | url: content})
+      _ -> block
+    end
+
+
+    {:reply, :ok, %{state | grid: grid}}
   end
 
   defp move_player(
@@ -272,6 +294,7 @@ defmodule VirtualRcAlt.Grid do
   end
 
   defp broadcast_update(grid, position) do
+    Logger.info("Updaing #{inspect position}")
     Phoenix.PubSub.broadcast(
       VirtualRcAlt.PubSub,
       @topic,

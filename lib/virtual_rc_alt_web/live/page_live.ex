@@ -1,9 +1,9 @@
 defmodule VirtualRcAltWeb.PageLive do
   use VirtualRcAltWeb, :live_view
 
-  alias VirtualRcAltWeb.GridCellComponent
+  alias VirtualRcAltWeb.{GridCellComponent, EditCellComponent}
 
-  alias VirtualRcAlt.{Grid, Player}
+  alias VirtualRcAlt.{Grid, Player, NoteBlock, LinkBlock}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,7 +21,8 @@ defmodule VirtualRcAltWeb.PageLive do
        width: width,
        height: height,
        viewport: viewport,
-       player: player
+       player: player,
+       edit_cell: nil
      )}
   end
 
@@ -43,18 +44,31 @@ defmodule VirtualRcAltWeb.PageLive do
         "ArrowRight" -> move(socket, :right)
         "x" -> create_or_destroy_block(socket)
         "c" -> change_block_color(socket)
+        "e" -> edit_block(socket)
         _ -> socket
       end
 
     {:noreply, socket}
   end
 
+
+  def handle_event("close-editor", _, socket) do
+    {:noreply, assign(socket, edit_cell: nil)}
+  end
+
+  def handle_event("save-editor", %{"content" => content}, %{assigns: %{edit_cell: %{position: position}}} = socket) do
+    Grid.edit_block(position, content)
+
+    {:noreply, assign(socket, edit_cell: nil)}
+  end
   @impl true
+  @spec handle_info({:open_editor, any, any} | {:update_cell, {any, any}, any}, map) ::
+          {:noreply, any}
   def handle_info(
         {:update_cell, {x, y} = position, value},
         %{assigns: %{width: width, height: height, origin: {x_origin, y_origin}}} = socket
       ) do
-    if x > x_origin && x < x_origin + width && y > y_origin && y < y_origin + height do
+    if x >= x_origin && x < x_origin + width && y >= y_origin && y < y_origin + height do
       require Logger; Logger.info("Cell update: #{x}, #{y}: #{inspect value}")
       send_update(GridCellComponent, id: position, contents: value)
     end
@@ -62,16 +76,8 @@ defmodule VirtualRcAltWeb.PageLive do
     {:noreply, socket}
   end
 
-  @impl true
-  @spec render(any) :: Phoenix.LiveView.Rendered.t()
-  def render(assigns) do
-    ~L"""
-    <div id="grid:<%= inspect @origin %>" class="grid" phx-window-keydown="keydown">
-    <%= for y <- y_range(@origin, @height), x <- x_range(@origin, @width) do %>
-      <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: @viewport[{x,y}], currently_facing: false %>
-    <% end %>
-    </div>
-    """
+  def handle_info({:open_editor, position, contents}, socket) do
+    {:noreply, assign(socket, edit_cell: %{position: position, contents: contents})}
   end
 
   defp x_range({x, _}, width), do: x..(x + width - 1)
@@ -118,7 +124,7 @@ defmodule VirtualRcAltWeb.PageLive do
 
     new_viewport =
       if new_origin != origin do
-        Grid.get_viewport(origin, width, height)
+        Grid.get_viewport(new_origin, width, height)
       else
         viewport
       end
@@ -137,6 +143,12 @@ defmodule VirtualRcAltWeb.PageLive do
 
   defp change_block_color(socket) do
     Grid.change_block_color()
+
+    socket
+  end
+
+  defp edit_block(%{assigns: %{player: player}} = socket) do
+    GridCellComponent.edit(facing(player))
 
     socket
   end

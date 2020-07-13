@@ -1,0 +1,8 @@
+<%= if @edit_cell do %>
+    <%= live_component @socket, EditCellComponent, id: :edit_cell, position: @edit_cell[:position], contents: @edit_cell[:contents] %>
+<% end %>
+<div id="grid:<%= inspect @origin %>" class="grid" <%= unless @edit_cell do %> phx-window-keydown="keydown" <% end %>>
+    <%= for y <- y_range(@origin, @height), x <- x_range(@origin, @width) do %>
+        <%= live_component @socket, GridCellComponent, id: {x,y}, x: x, y: y, contents: @viewport[{x,y}], currently_facing: false %>
+    <% end %>
+</div>

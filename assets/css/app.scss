@@ -181,3 +181,30 @@
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
   opacity: 1;
 }
+
+/* Modals from the default css */
+
+/* Semi-transparent overlay container */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 998;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Foreground container */
+.modal-inner-container {
+  position: float;
+  z-index: 999;
+  background: white;
+  padding: 1em;
+  border: 1px solid black;
+}
+
