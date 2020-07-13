@@ -92,7 +92,7 @@ defmodule VirtualRcAlt.Grid do
       position: @spawn_point,
       facing: :right,
       name: name,
-      initial: String.first(name) |> String.upcase()
+      initial: (String.first(name) || "?") |> String.upcase()
     }
 
     {:reply, player,
